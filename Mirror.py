@@ -4,6 +4,9 @@ import imaplib
 import email
 import datetime
 import Tkinter
+import requests
+import random
+import json
 from googlefinance import getQuotes
 
 FONT_1 = 60
@@ -20,6 +23,7 @@ FORECAST_IO_API = parameters[3]
 SIGNIFICANT_DATE = parameters[4]
 STOCK = parameters[5]
 EMAIL = parameters[6]
+EXIST_TOKEN = parameters[7]
 
 
 # noinspection PyAttributeOutsideInit
@@ -33,18 +37,20 @@ class Main(object):
         self.mainframe.pack(fill=Tkinter.BOTH, expand=True)
         self.build_grid()
 
-        self.the_finances = None
+        # self.the_finances = None
         self.the_date_time = None
         self.yesterday_closing = 13.04
         self.the_forecast = None
         self.the_count = None
         self.the_email_subject = None
+        self.the_exist = None
 
         self.create_email_display()
         self.create_count_up()
         self.create_meteorology()
-        self.create_finances()
+        # self.create_finances()
         self.create_date_time()
+        self.create_exist_io()
 
     def build_grid(self):
         """ Builds a 2 column x 3 row grid for the display"""
@@ -146,7 +152,7 @@ class Main(object):
             """ Uses the Google Finance API to get most recent data. """
             current_price = float(getQuotes('MUTF_CA:INI220')[0]['LastTradePrice'])
 
-            if datetime.datetime.now().strftime('%H') == '00':
+            if datetime.datetime.now().strftime('%m') == '00':
                 self.yesterday_closing = current_price
 
             if self.yesterday_closing:  # could be initialized to None
@@ -171,6 +177,37 @@ class Main(object):
             self.display_finances.after(30*60*60*15, change_finance_values)
         change_finance_values()
 
+    def create_exist_io(self, font_size=FONT_2):
+        self.display_exist = Tkinter.Label(self.mainframe)
+        self.display_exist.grid(row=1, column=0, sticky='w')
+
+        def change_exist_data():
+            if datetime.datetime.now().minute == 10:
+                print "Change of insights"
+                print datetime.datetime.now()
+                global INSIGHTS
+                INSIGHTS = get_new_insights()
+
+            this_insight = random.choice(INSIGHTS['results'])
+            insight_string = this_insight['text']
+
+            if this_insight['target_date']:
+                dt_obj = datetime.datetime.strptime(this_insight['target_date'], "%Y-%m-%d")
+                date_string = dt_obj.strftime("%a, %b %d")
+                insight_string = date_string + "\n" + insight_string
+
+            self.display_exist.config(
+                text= insight_string,
+                font=("Helvetica", font_size),
+                bg='black',
+                fg='white',
+                justify='right'
+                )
+
+            self.display_exist.after(1000*30, change_exist_data)
+        change_exist_data()
+
+
     def create_date_time(self, font_size=FONT_2):
         """ Makes the label for displaying date, time. """
         self.display_date_time = Tkinter.Label(self.mainframe)
@@ -193,6 +230,16 @@ class Main(object):
             self.display_date_time.after(1000, change_time_value)
         change_time_value()
 
+
+def get_new_insights():
+    token_string = 'Token {}'.format(EXIST_TOKEN)
+    # headers_dict = {'Authorization': token_string}
+
+    insights_response = requests.get("https://exist.io/api/1/users/$self/insights",
+        headers={'Authorization':token_string}).text
+    insights_response = json.loads(insights_response)
+
+    return insights_response
 
 def initialize_mail_account(email_address, password):
     """ Logs into a gmail account, given login information. """
@@ -224,6 +271,8 @@ def process_mailbox(m):
         output += message['Subject']
 
         return output[0:66]  # length limit
+
+INSIGHTS = get_new_insights()
 
 if __name__ == '__main__':
     root = Tkinter.Tk()
