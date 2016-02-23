@@ -12,6 +12,7 @@ from googlefinance import getQuotes
 FONT_1 = 60
 FONT_2 = 50
 FONT_3 = 40
+FONT_4 = 35
 
 with open("parameters.txt", "r") as text_file:
     parameters = text_file.read().splitlines()
@@ -57,7 +58,8 @@ class Main(object):
         self.mainframe.columnconfigure(0, weight=1)
         self.mainframe.rowconfigure(0, weight=0)
         self.mainframe.rowconfigure(1, weight=1)
-        self.mainframe.rowconfigure(2, weight=0)
+        self.mainframe.rowconfigure(2, weight=1)
+	self.mainframe.rowconfigure(3, weight=0)
 
     def create_email_display(self, font_size=FONT_2):
         """ Creates a Tkinter label where email data can be displayed """
@@ -89,7 +91,7 @@ class Main(object):
     def create_count_up(self, font_size=FONT_2):
         """ Creates Label to display 'days since event' """
         self.display_count_up = Tkinter.Label(self.mainframe)
-        self.display_count_up.grid(row=1, column=0, sticky='e')
+        self.display_count_up.grid(row=1, column=0, sticky='NW')
 
         def change_the_count():
             today = datetime.date.today()
@@ -101,7 +103,7 @@ class Main(object):
 
             if self.the_count != count_today:
                 self.the_count = count_today
-                count_string = "{0} days with Sarah".format(self.the_count)
+                count_string = "{0} days \n with Sarah".format(self.the_count)
                 self.display_count_up.config(
                     text=count_string,
                     font=("Helvetica", font_size),
@@ -112,11 +114,11 @@ class Main(object):
             self.display_count_up.after(10800000, change_the_count)
         change_the_count()
 
-    def create_meteorology(self, font_size=FONT_3):
+    def create_meteorology(self, font_size=FONT_4):
         """ Makes label that includes temperature, weather and forecast
         :param font_size: Can be changed to an int if not fitting on display """
         self.display_forecast = Tkinter.Label(self.mainframe)
-        self.display_forecast.grid(row=2, column=0, sticky='es')
+        self.display_forecast.grid(row=2, column=0, sticky='NE')
 
         def change_forecast_value():
             """ Gets the most recent forecast/weather """
@@ -143,7 +145,7 @@ class Main(object):
             self.display_forecast.after(900000, change_forecast_value)
         change_forecast_value()
 
-    def create_finances(self, font_size=FONT_2):
+    def create_finances(self, font_size=FONT_1):
         """ Makes the Label for the financial information """
         self.display_finances = Tkinter.Label(self.mainframe)
         self.display_finances.grid(row=1, column=0, sticky='w')
@@ -177,12 +179,12 @@ class Main(object):
             self.display_finances.after(30*60*60*15, change_finance_values)
         change_finance_values()
 
-    def create_exist_io(self, font_size=FONT_2):
+    def create_exist_io(self, font_size=FONT_4):
         self.display_exist = Tkinter.Label(self.mainframe)
-        self.display_exist.grid(row=1, column=0, sticky='w')
+        self.display_exist.grid(row=3, column=0, sticky='es')
 
         def change_exist_data():
-            if datetime.datetime.now().minute == 10:
+            if datetime.datetime.now().minute == 30:
                 print "Change of insights"
                 print datetime.datetime.now()
                 global INSIGHTS
@@ -194,7 +196,7 @@ class Main(object):
             if this_insight['target_date']:
                 dt_obj = datetime.datetime.strptime(this_insight['target_date'], "%Y-%m-%d")
                 date_string = dt_obj.strftime("%a, %b %d")
-                insight_string = date_string + "\n" + insight_string
+                insight_string = '[' + date_string + ']:\n' + insight_string
 
             self.display_exist.config(
                 text= insight_string,
