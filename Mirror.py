@@ -9,10 +9,10 @@ import random
 import json
 from googlefinance import getQuotes
 
-FONT_1 = 60
-FONT_2 = 50
-FONT_3 = 40
-FONT_4 = 35
+FONT_1 = 40
+FONT_2 = 30
+FONT_3 = 25
+FONT_4 = 20
 
 with open("parameters.txt", "r") as text_file:
     parameters = text_file.read().splitlines()
