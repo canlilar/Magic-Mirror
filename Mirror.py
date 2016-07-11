@@ -59,7 +59,7 @@ class Main(object):
         self.mainframe.rowconfigure(0, weight=0)
         self.mainframe.rowconfigure(1, weight=1)
         self.mainframe.rowconfigure(2, weight=1)
-	self.mainframe.rowconfigure(3, weight=0)
+        self.mainframe.rowconfigure(3, weight=0)
 
     def create_email_display(self, font_size=FONT_2):
         """ Creates a Tkinter label where email data can be displayed """
@@ -185,12 +185,10 @@ class Main(object):
 
         def change_exist_data():
             if datetime.datetime.now().minute == 30:
-                print "Change of insights"
-                print datetime.datetime.now()
                 global INSIGHTS
                 INSIGHTS = get_new_insights()
 
-            this_insight = random.choice(INSIGHTS['results'])
+            this_insight = random.choice(INSIGHTS)
             insight_string = this_insight['text']
 
             if this_insight['target_date']:
@@ -199,7 +197,7 @@ class Main(object):
                 insight_string = '[' + date_string + ']:\n' + insight_string
 
             self.display_exist.config(
-                text= insight_string,
+                text=insight_string,
                 font=("Helvetica", font_size),
                 bg='black',
                 fg='white',
@@ -208,7 +206,6 @@ class Main(object):
 
             self.display_exist.after(1000*30, change_exist_data)
         change_exist_data()
-
 
     def create_date_time(self, font_size=FONT_2):
         """ Makes the label for displaying date, time. """
@@ -233,15 +230,25 @@ class Main(object):
         change_time_value()
 
 
+def get_past_date(days=5):
+    today = datetime.datetime.now()
+    return today - datetime.timedelta(days=days)
+
+
 def get_new_insights():
     token_string = 'Token {}'.format(EXIST_TOKEN)
-    # headers_dict = {'Authorization': token_string}
 
-    insights_response = requests.get("https://exist.io/api/1/users/$self/insights",
-        headers={'Authorization':token_string}).text
-    insights_response = json.loads(insights_response)
+    insights_response = requests.get("https://exist.io/api/1/users/$self/insights/",
+                                     headers={'Authorization': token_string}).text
+    json_response = json.loads(insights_response)
 
-    return insights_response
+    output = []
+    for insight in json_response['results']:
+        created_at = insight['created']
+        if datetime.datetime.strptime(created_at, '%Y-%m-%dT%H:%M:%SZ') > get_past_date(7):
+            output.append(insight)
+    return output
+
 
 def initialize_mail_account(email_address, password):
     """ Logs into a gmail account, given login information. """
